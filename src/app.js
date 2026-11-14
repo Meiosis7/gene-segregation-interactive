@@ -22,7 +22,7 @@
       insight: '等位基因随同源染色体分离。',
     },
     {
-      kind: '减数第二次分裂 · 完成',
+      kind: '减数第二次分裂 · 分离至完成',
       title: '每个分裂产物只含 A 或 a',
       text: '姐妹染色单体分开后，图中 4 个单倍体产物有 2 个带 A、2 个带 a。正常情况下，Aa 产生的 A 与 a 配子各占 ½。',
       insight: '配子只带这一对等位基因中的一个。',
@@ -75,6 +75,12 @@
   let female = 'Aa';
   let customMale = 'Aa';
   let run = null;
+  const M = SegregationMotion;
+  const boundaries = [0, 6, 13, 16];
+  let player = {time:0,start:0,end:0,playing:false,speed:1,type:'separation'};
+  let continuous = false;
+  let lastFrame = 0;
+  let fusionCommitted = false;
   let reason = 0;
   let selectedCell = null;
   let counts = { AA: 0, Aa: 0, aa: 0 };
@@ -103,7 +109,7 @@
         button.removeAttribute('aria-current');
       }
     }
-    if (view === 'mechanism') renderStage();
+    if (view === 'mechanism') { rebuildPool(); renderStage(); }
     if (view === 'lab') renderLab();
     if (view === 'practice') renderExercise();
   }
@@ -121,24 +127,81 @@
       `<span class="chromosome-art" aria-hidden="true"></span><span class="locus">${allele}</span>${single ? '' : `<span class="locus locus-pair">${allele}</span>`}`);
   }
 
-  function renderSeparation() {
-    if (stage === 0) {
-      return at('plant-context', 12, 51, '<span class="plant-art"></span><span class="plant-name">豌豆 · Aa</span>') + membrane(59, 50, 55, 82) + chromosome('A', 51, 50) + chromosome('a', 67, 50)
-        + at('scene-caption', 59, 9, '走进 Aa 的细胞')
-        + at('scene-label', 59, 91, '相同位点 · 不同等位基因');
+  // These image layers are created once; every frame moves the existing objects.
+  function initScene() {
+    byId('scene-art').innerHTML = '<span id="separation-layer" class="scene-layer">' +
+      at('plant-context',12,51,'<span class="plant-art"></span><span class="plant-name">豌豆 · Aa</span>') +
+      membrane(59,50,55,82) + [26,74].map(x=>membrane(x,50,43,76)).join('') +
+      [14,38,62,86].map(x=>membrane(x,50,21,53)).join('') +
+      at('spindle spindle-left',18,50) + at('spindle spindle-right',74,50) +
+      chromosome('A',51,50) + chromosome('a',67,50) +
+      [14,38,62,86].map((x,i)=>chromosome(i<2?'A':'a',x,50,true)).join('') +
+      at('scene-label product-note',26,86,'A 配子概率 ½') + at('scene-label product-note',74,86,'a 配子概率 ½') +
+      '</span><span id="pool-layer" class="scene-layer"></span>';
+    rebuildPool();
+  }
+
+  function rebuildPool() {
+    byId('pool-layer').innerHTML = renderFertilization();
+  }
+
+  function place(node,x,opacity) {
+    node.style.setProperty('--x',x+'%');
+    node.style.opacity=opacity;
+  }
+
+  function paintSeparation(t) {
+    const f=M.frame(t), layer=byId('separation-layer');
+    const membranes=[...layer.querySelectorAll('.cell-membrane')];
+    place(membranes[0],f.motherX,f.motherOpacity);
+    membranes[0].style.setProperty('--w',f.motherWidth+'%');
+    membranes[0].style.setProperty('--h',f.motherHeight+'%');
+    membranes.slice(1,3).forEach((n,i)=>{place(n,[26,74][i],f.daughterOpacity);n.style.setProperty('--w',f.daughterWidth+'%');});
+    membranes.slice(3).forEach((n,i)=>place(n,[14,38,62,86][i],f.productOpacity));
+    layer.querySelector('.plant-context').style.opacity=f.plantOpacity;
+    [...layer.querySelectorAll('.chromosome:not(.single)')].forEach((n,i)=>place(n,f.x[i],f.xOpacity));
+    [...layer.querySelectorAll('.single')].forEach((n,i)=>place(n,f.rods[i],f.rodsOpacity));
+    layer.querySelectorAll('.product-note').forEach(n=>n.style.opacity=f.productOpacity);
+    const lines=layer.querySelectorAll('.spindle');
+    place(lines[0],18,f.spindleOpacity);lines[0].style.width=(f.x[0]-18)+'%';
+    place(lines[1],f.x[1],f.spindleOpacity);lines[1].style.width=(82-f.x[1])+'%';
+    byId('pool-layer').style.opacity=f.poolOpacity;
+    byId('motion-status').textContent=t===0?'点击下一步，观察同源染色体怎样分离':t===16?'两个亲本的配子池已就绪，点击画面开始受精':f.caption;
+  }
+
+  function paintFusion(t) {
+    paintSeparation(16);
+    const travel=M.progress(t,.5,2.9), merge=M.progress(t,2.9,3.7);
+    all('.fusion-pick').forEach((n,i)=>{
+      const x=Number(n.style.getPropertyValue('--from-x').replace('%',''));
+      const y=Number(n.style.getPropertyValue('--from-y').replace('%',''));
+      place(n,M.mix(x,i===0?47:53,travel),1-merge);
+      n.style.setProperty('--y',M.mix(y,50,travel)+'%');
+    });
+    const result=byId('pool-layer').querySelector('.fusion-result');
+    result.style.opacity=merge;
+    result.style.transform='scale('+M.mix(.8,1,merge)+')';
+    byId('pool-layer').querySelector('.scene-label').textContent=t<2.9?'两枚配子各携带一个等位基因':`受精卵 · ${fusion.genotype} · ${phenotype(fusion.genotype)}子代`;
+    byId('motion-status').textContent=t<.5?'从两个配子池各抽取一枚配子':t<2.9?'追踪选中的配子：正在向中央靠近':t<3.7?'两枚配子结合，等位基因重新成对':'受精完成；本次结果已计入杂交实验';
+  }
+
+  function paintFrame() {
+    if(player.type==='fusion')paintFusion(player.time);else paintSeparation(player.time);
+    if(player.type==='separation'&&player.time===player.end){
+      if(stage===1)byId('motion-status').textContent='第一次分裂完成：A 与 a 已进入不同子细胞';
+      if(stage===2)byId('motion-status').textContent='第二次分裂完成：2 个产物带 A，2 个产物带 a';
     }
-    if (stage === 1) {
-      return membrane(50, 50, 87, 72) + chromosome('A', 27, 50) + chromosome('a', 73, 50)
-        + at('direction', 42, 48, '⟵') + at('direction', 58, 48, '⟶')
-        + at('scene-label', 27, 75, '携带 A') + at('scene-label', 73, 75, '携带 a');
-    }
-    return at('scene-caption', 50, 14, '4 个单倍体产物')
-      + [14, 38, 62, 86].map((x, index) => {
-        const allele = index < 2 ? 'A' : 'a';
-        return membrane(x, 49, 21, 53) + chromosome(allele, x, 49, true);
-      }).join('')
-      + at('scene-label', 26, 84, 'A 配子概率 ½')
-      + at('scene-label', 74, 84, 'a 配子概率 ½');
+    const span=player.end-player.start;
+    byId('motion-progress').disabled=!span;
+    byId('motion-progress').value=span?Math.round((player.time-player.start)/span*1000):0;
+    byId('motion-time').textContent=`${(player.time-player.start).toFixed(1)} / ${span.toFixed(1)} 秒`;
+    byId('scene').dataset.stage=stage;
+    byId('scene-prompt').textContent=player.playing?'点击画面 · 暂停观察':player.time<player.end?'点击画面 · 继续动画':stage===3?'点击画面 · 随机受精':'点击画面 · 推进动画';
+    byId('scene').setAttribute('aria-label',byId('motion-status').textContent+'。'+byId('scene-prompt').textContent);
+    byId('play').textContent=player.playing?'Ⅱ 暂停':player.time<player.end?'▷ 继续':'▷ 连续播放';
+    byId('play').setAttribute('aria-pressed',String(player.playing));
+    byId('next').disabled=player.playing;
+    byId('replay').disabled=stage===0;
   }
 
   function renderFertilization() {
@@ -146,7 +209,7 @@
     const { eggs, sperm } = cross(mother, father);
     const poolY = (gameteList, index) => gameteList.length === 1 ? 50 : 35 + index * 37;
     const pool = (gameteList, x) => gameteList.map(({ allele, p }, index) =>
-      at(`gamete-chip pool-chip allele-${allele}`, x, poolY(gameteList, index),
+      at(`gamete-chip pool-chip pool-${x===19?'egg':'sperm'} allele-${allele}`, x, poolY(gameteList, index),
         `<span>${allele}<small class="pool-prob">${fraction(p)}</small></span>`)
     ).join('');
     const pick = (allele, gameteList, x) => {
@@ -164,66 +227,81 @@
       + paired;
   }
 
-  function renderStage(previous = stage) {
-    const phase = phases[stage];
-    byId('phase-kind').textContent = phase.kind;
-    byId('phase-count').textContent = `${stage + 1} / ${phases.length}`;
-    byId('phase-title').textContent = phase.title;
-    byId('phase-text').textContent = phase.text;
-    byId('phase-insight').textContent = phase.insight;
-    byId('scene').dataset.stage = stage;
-    byId('scene-art').innerHTML = stage === 3 ? renderFertilization() : renderSeparation();
-    byId('scene-prompt').textContent = stage === 3 ? '点击画面 · 随机受精' : '点击画面 · 推进动画';
-    byId('scene').setAttribute('aria-label', stage === 3 && fusion
-      ? `抽到 ${fusion.egg} 卵细胞和 ${fusion.sperm} 精子，受精卵为 ${fusion.genotype}。点击再次随机受精`
-      : byId('scene-prompt').textContent);
-    byId('prev').disabled = stage === 0;
-    byId('next').textContent = stage === 3 ? '进入杂交实验 →' : '下一步 →';
-    for (const button of all('[data-stage]')) {
-      if (Number(button.dataset.stage) === stage) button.setAttribute('aria-current', 'step');
+  function renderStage() {
+    const phase=phases[stage];
+    byId('phase-kind').textContent=phase.kind;
+    byId('phase-count').textContent=`${stage+1} / ${phases.length}`;
+    byId('phase-title').textContent=phase.title;
+    byId('phase-text').textContent=phase.text;
+    byId('phase-insight').textContent=phase.insight;
+    byId('prev').disabled=stage===0;
+    byId('next').textContent=stage===3?'进入杂交实验 →':'下一步 →';
+    all('#phases [data-stage]').forEach(button=>{
+      if(Number(button.dataset.stage)===stage)button.setAttribute('aria-current','step');
       else button.removeAttribute('aria-current');
-    }
-
-    const offsets = previous === 0 && stage === 1 ? [16, -16]
-      : previous === 1 && stage === 2 ? [13, -11, 11, -13] : [];
-    if (!motion.matches) all('.chromosome').forEach((item, index) => {
-      if (offsets[index] === undefined) return;
-      const distance = byId('scene').clientWidth * offsets[index] / 100;
-      item.animate([{ transform: `translateX(${distance}px)` }, { transform: 'translateX(0)' }],
-        { duration: 680, easing: 'cubic-bezier(.27,.73,.29,1)' });
     });
-  }
-
-  function goStage(next, manual = true) {
-    if (manual) stopPlayback();
-    const previous = stage;
-    stage = Math.min(Math.max(next, 0), phases.length - 1);
-    if (previous !== stage) fusion = null;
-    renderStage(previous);
+    paintFrame();
   }
 
   function stopPlayback() {
-    clearInterval(run);
-    run = null;
-    byId('play').textContent = '▷ 播放';
-    byId('play').setAttribute('aria-pressed', 'false');
+    cancelAnimationFrame(run);
+    run=null;
+    player.playing=false;
+    continuous=false;
+    if(byId('pool-layer'))paintFrame();
   }
 
-  function togglePlayback() {
-    if (run !== null) {
-      stopPlayback();
-      return;
+  function completeFusion() {
+    if(fusionCommitted||!fusion)return;
+    latest=fusion;
+    counts[fusion.genotype]++;
+    recent.push(fusion.genotype);
+    if(recent.length>24)recent.shift();
+    fusionCommitted=true;
+  }
+
+  function tick(now) {
+    player=M.advance(player,Math.min((now-lastFrame)/1000,.1));
+    lastFrame=now;
+    if(!player.playing && player.type==='fusion')completeFusion();
+    paintFrame();
+    if(player.playing){run=requestAnimationFrame(tick);return;}
+    run=null;
+    if(continuous && player.type==='separation'){
+      if(stage<3)beginStage(stage+1,true);
+      else drawFusion(true);
+    }else continuous=false;
+  }
+
+  function startPlayback(auto=false) {
+    continuous=auto;
+    player.playing=true;
+    lastFrame=performance.now();
+    cancelAnimationFrame(run);
+    run=requestAnimationFrame(tick);
+    paintFrame();
+  }
+
+  function beginStage(next,auto=false) {
+    stopPlayback();
+    stage=next;
+    fusion=null;
+    rebuildPool();
+    player={...player,type:'separation',start:boundaries[Math.max(0,stage-1)],time:boundaries[Math.max(0,stage-1)],end:boundaries[stage],playing:false};
+    renderStage();
+    if(stage>0){
+      if(motion.matches&&!auto){player.time=player.end;paintFrame();}
+      else startPlayback(auto);
     }
-    if (stage === 3) goStage(0, false);
-    byId('play').textContent = 'Ⅱ 暂停';
-    byId('play').setAttribute('aria-pressed', 'true');
-    run = setInterval(() => {
-      if (stage < 3) goStage(stage + 1, false);
-      else {
-        drawFusion();
-        stopPlayback();
-      }
-    }, 2350);
+  }
+
+  function goStage(next) {beginStage(Math.min(Math.max(next,0),3));}
+
+  function togglePlayback() {
+    if(player.playing){stopPlayback();return;}
+    if(player.time<player.end){startPlayback(true);return;}
+    if(stage===3){drawFusion();return;}
+    beginStage(stage+1,true);
   }
 
   function draw(count) {
@@ -237,9 +315,13 @@
     return latest;
   }
 
-  function drawFusion() {
-    fusion = draw(1);
-    renderStage();
+  function drawFusion(auto=false) {
+    stopPlayback();
+    fusion=fertilize(...parents());
+    fusionCommitted=false;
+    rebuildPool();
+    player={...player,type:'fusion',time:0,start:0,end:4.5,playing:false};
+    startPlayback(auto);
   }
 
   function clearSamples() {
@@ -247,6 +329,8 @@
     recent = [];
     latest = null;
     fusion = null;
+    fusionCommitted = false;
+    if(stage===3){player={...player,type:'separation',start:13,time:16,end:16,playing:false};rebuildPool();}
   }
 
   function changeCross(update) {
@@ -369,18 +453,32 @@
   }
 
   all('[data-view]').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
-  all('[data-stage]').forEach(button => button.addEventListener('click', () => goStage(Number(button.dataset.stage))));
+  all('#phases [data-stage]').forEach(button => button.addEventListener('click', () => goStage(Number(button.dataset.stage))));
   byId('prev').addEventListener('click', () => goStage(stage - 1));
   byId('next').addEventListener('click', () => stage === 3 ? showView('lab', true) : goStage(stage + 1));
   byId('play').addEventListener('click', togglePlayback);
   byId('reset').addEventListener('click', () => goStage(0));
   byId('scene').addEventListener('click', () => {
-    if (stage < 3) goStage(stage + 1);
-    else {
-      stopPlayback();
-      drawFusion();
+    if(player.playing){stopPlayback();return;}
+    if(player.time<player.end){startPlayback();return;}
+    if(stage<3)goStage(stage+1);else drawFusion();
+  });
+  byId('replay').addEventListener('click',()=>{
+    stopPlayback();
+    if(player.type==='fusion'){player.time=0;startPlayback();}
+    else beginStage(stage);
+  });
+  byId('motion-progress').addEventListener('input',event=>{
+    const requested=Number(event.target.value);
+    stopPlayback();
+    player.time=player.start+(player.end-player.start)*requested/1000;
+    paintFrame();
+    if(player.type==='fusion'&&!fusionCommitted&&player.time===player.end){
+      byId('motion-status').textContent='查看受精终点（拖动预览不新增样本）；重播本段可完成本次受精';
     }
   });
+  byId('motion-speed').addEventListener('change',event=>{player.speed=Number(event.target.value);});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPlayback();});
   all('[data-cross]').forEach(button => button.addEventListener('click', () => changeCross(() => {
     mode = button.dataset.cross;
   })));
@@ -420,6 +518,7 @@
     renderDisplay();
   });
 
+  initScene();
   renderStage();
   renderLab();
   renderExercise();
