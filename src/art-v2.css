@@ -1,0 +1,69 @@
+/* AI illustrations, overlaid with precise interactive labels. */
+:root { --paper:#f7f1e5; --canvas:#f5f0e6; --ink:#293d31; --muted:#627064; --deep:#254b3b; --line:#d8d5c7 }
+body { background:#f5f0e6 }
+.masthead { background:transparent; color:var(--deep); border-bottom:1px solid #c9d0bd }
+.mast-inner { max-width:1440px; padding:.7rem 2rem }
+.brand { font-size:.86rem; letter-spacing:.08em }
+.display-tools button { background:transparent; color:var(--deep); border-color:#bac5b6 }
+main { max-width:1440px; padding:1.5rem 2rem 2rem }
+.title-area { margin-bottom:1.3rem }
+h1 { font-size:clamp(1.6rem,3.1vw,2.85rem); letter-spacing:-.025em }
+.chapter { letter-spacing:.18em; font-size:.75rem; margin-bottom:.5rem }
+.modes { gap:1rem; padding-bottom:0; margin-bottom:1.2rem; border-color:#c6cdbc }
+.modes button { padding:.6rem .9rem .8rem; background:none; border:0; border-bottom:3px solid transparent; border-radius:0; color:#738172; font-size:.9rem }
+.modes button[aria-current="page"] { background:none; color:var(--deep); border-bottom:3px solid var(--deep) }
+.mechanism-layout { grid-template-columns:minmax(0,1fr) 300px; gap:1.4rem }
+.board { border-color:#c6cbb9; border-radius:12px; box-shadow:0 8px 25px #5360420a; background:#fcf9f0 }
+.board-head { background:#edf0e3; padding:.8rem 1.2rem; border-bottom:1px solid #d5d9c9 }
+.notebook { background:transparent; border:0; border-radius:0; padding:.3rem 0; box-shadow:none }
+.phases { gap:.6rem }
+.phases button { min-height:51px; border-radius:7px; font-size:.92rem }
+.phases button[aria-current="step"] { background:#e4ebd8; border-color:#b7c5a7 }
+.phases button::before { background:transparent; border-color:#b5c0ad; font-family:Georgia,serif }
+.explanation { margin-top:1.3rem; padding-top:1.2rem }
+.explanation h2 { font-size:1.3rem; line-height:1.5; font-family:'Songti SC',serif }
+.explanation p { font-size:.9rem; line-height:1.9; margin:.75rem 0 }
+.insight { background:#e8ecdc; border-color:#72905b; padding:.8rem; line-height:1.7 }
+.scene,.scene:hover:not(:disabled) { height:clamp(350px,37vw,515px); background:#fcf9f0 }
+.scene-art { inset:0 0 2.7rem }
+.scene-prompt { bottom:.8rem; font-weight:500; color:#697863; border-color:#c9d2bb; background:#fcf9f0; padding:.3rem 1rem }
+.cell-membrane { border:0; border-radius:0; box-shadow:none; background-image:url('ASSET:biology-atlas.png'); background-size:300% 200%; background-position:0 100%; mix-blend-mode:multiply }
+.chromosome { width:clamp(65px,15cqw,140px); height:clamp(95px,21cqw,195px); filter:none }
+.chromosome-art { display:block; width:100%; height:100%; background-image:url('ASSET:biology-atlas.png'); background-size:300% 200%; background-position:50% 100%; mix-blend-mode:multiply }
+.allele-a .chromosome-art { background-position:100% 100% }
+.chromosome.single { scale:1; width:clamp(38px,7cqw,68px); height:clamp(65px,16cqw,145px) }
+.chromosome.single .chromosome-art { background-image:url('ASSET:chromatids.png'); background-size:400% 100%; background-position:30% 50% }
+.chromosome.single.allele-a .chromosome-art { background-position:70% 50% }
+.locus { left:67%; top:28%; width:clamp(22px,3.8cqw,34px); background:#fffaf1; border-width:1.5px; box-shadow:0 2px 4px #33452016; font-size:clamp(15px,2.6cqw,23px) }
+.locus-pair { left:33% }
+.chromosome.single .locus { left:57%; top:28% }
+.locus::before { display:none }
+.scene-caption { color:#53654a; font-size:clamp(.8rem,1.8cqw,1rem); letter-spacing:.06em }
+.scene-label { background:#fcf9f0d9; border-radius:5px; padding:3px 9px; color:#64735a; font-size:clamp(.7rem,1.7cqw,.9rem) }
+.plant-context { position:absolute; left:var(--x); top:var(--y); translate:-50% -50%; width:24%; height:86%; display:flex; flex-direction:column; justify-content:center; align-items:center; border-right:1px dashed #bccaaa }
+.plant-art { display:block; width:100%; aspect-ratio:1; background-image:url('ASSET:biology-atlas.png'); background-size:300% 200%; background-position:0 0; mix-blend-mode:multiply }
+.plant-context .plant-art { width:100%; height:78%; aspect-ratio:auto }
+.plant-name { color:#596d48; font-size:clamp(.7rem,1.6cqw,.9rem); margin-top:.6rem }
+.seed { background-image:url('ASSET:biology-atlas.png'); background-size:300% 200%; background-position:50% 0; box-shadow:none; border:0; border-radius:0; transform:none; mix-blend-mode:multiply; width:1.7rem; height:1.7rem }
+.seed.green { background-position:100% 0 }
+.seed-key { gap:.8rem; padding:.4rem .8rem; border:1px solid #d0d5c5; border-radius:30px; font-size:.8rem }
+.seed-key .seed { width:2rem; height:2rem }
+.transport { padding:.85rem 1rem; background:#f7f6ed; gap:.6rem }
+.transport button { min-height:42px; font-size:.86rem; border-radius:6px }
+.parent-illustration { display:flex; height:125px; align-items:center; justify-content:space-around; margin:.3rem 0 }
+.parent-illustration .plant-art { width:115px; height:125px; flex-shrink:0 }
+.cross-caption { font-size:.8rem; color:var(--muted); max-width:180px; text-align:center }
+.punnett td button { min-height:95px; flex-direction:column; gap:.1rem }
+.punnett td button .seed { width:55px; height:55px }
+.punnett td button b { font-size:1.15rem }
+.punnett td button small { font-size:.75rem }
+.sample-seeds .seed { width:32px; height:32px }
+.distribution .seed { width:1.2rem; height:1.2rem; vertical-align:middle }
+.fusion-result { background:#f7f5df; border-color:#9eaf84 }
+.pool-chip { background:#f8f7e9; border-color:#a7b88f }
+@media(max-width:1000px) { .mechanism-layout { grid-template-columns:minmax(0,1fr) 255px; gap:.8rem } main { padding:1.2rem } .mast-inner { padding:.65rem 1.2rem } }
+@media(max-width:760px) { .mechanism-layout { grid-template-columns:1fr } main { padding:1rem .7rem } .mast-inner { padding:.5rem .7rem } .brand { font-size:.74rem; letter-spacing:0 } .title-area { gap:.8rem } .seed-key { padding:.2rem .6rem } .modes { gap:.2rem; margin-bottom:.8rem } .modes button { padding:.55rem .2rem; font-size:.8rem } .scene,.scene:hover:not(:disabled) { height:330px } .phases { grid-template-columns:1fr 1fr; gap:.25rem } .phases button { font-size:.78rem; min-height:40px; padding:.2rem } .phases button::before { width:1.4rem; height:1.4rem; flex-shrink:0 } .explanation { margin-top:.75rem; padding-top:.75rem } .notebook { padding:.3rem } .explanation h2 { font-size:1.15rem } .transport { padding:.6rem; gap:.3rem } .transport button { padding:.4rem .45rem; font-size:.78rem } }
+@media(orientation:landscape) and (max-height:530px) { .scene,.scene:hover:not(:disabled) { height:270px } .mechanism-layout { grid-template-columns:minmax(0,1fr) 225px } .phases { grid-template-columns:1fr } .explanation { margin-top:.5rem;padding-top:.5rem } .explanation h2 { font-size:1rem } .explanation p { font-size:.78rem } .chapter { display:none } main { padding-top:.6rem } h1 { font-size:1.5rem } }
+body.rotated .scene { height:270px }
+.chromosome,.plant-context { mix-blend-mode:multiply }
+.seed { background-color:transparent }

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="跟随 Aa 的分离，用棋盘法与随机抽样探究基因分离定律。">
+<title>基因分离定律的实质及应用｜一生儿</title>
+<style>/* STYLES */</style>
+</head>
+<body>
+<div id="page">
+<header class="masthead">
+  <div class="mast-inner">
+    <div class="brand">一生儿《高中生物一本通》· 必修 2</div>
+    <div class="display-tools">
+      <button id="landscape" type="button" aria-pressed="false">横屏阅读</button>
+      <button id="fullscreen" type="button" aria-pressed="false">全屏</button>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="title-area">
+    <div>
+      <p class="chapter">孟德尔的豌豆实验 · 01</p>
+      <h1>基因分离定律的实质及应用</h1>
+    </div>
+    <div class="seed-key" aria-label="性状图例">
+      <span><i class="seed yellow"></i><b>A</b> 黄色</span>
+      <span><i class="seed green"></i><b>a</b> 绿色</span>
+    </div>
+  </div>
+
+  <nav class="modes" aria-label="学习内容">
+    <button type="button" data-view="mechanism" aria-current="page">01　看清分离</button>
+    <button type="button" data-view="lab">02　亲手杂交</button>
+    <button type="button" data-view="practice">03　解决问题</button>
+  </nav>
+
+  <section id="mechanism" class="view" aria-label="分离动画">
+    <div class="mechanism-layout">
+      <article class="board">
+        <div class="board-head">
+          <span class="kicker" id="phase-kind"></span>
+          <span class="counter" id="phase-count"></span>
+        </div>
+        <button id="scene" class="scene" type="button" aria-describedby="phase-text">
+          <span class="scene-art" id="scene-art" aria-hidden="true"></span>
+          <span class="scene-prompt" id="scene-prompt"></span>
+        </button>
+        <div class="transport" aria-label="动画控制">
+          <button type="button" id="prev">← 上一步</button>
+          <button type="button" id="play" aria-pressed="false">▷ 播放</button>
+          <button type="button" id="reset">重置</button>
+          <button type="button" id="next" class="primary">下一步 →</button>
+        </div>
+      </article>
+
+      <aside class="notebook">
+        <ol id="phases" class="phases" aria-label="跳转阶段">
+          <li><button type="button" data-stage="0">同源染色体成对</button></li>
+          <li><button type="button" data-stage="1">同源染色体分离</button></li>
+          <li><button type="button" data-stage="2">减数分裂完成</button></li>
+          <li><button type="button" data-stage="3">随机受精</button></li>
+        </ol>
+        <div class="explanation" aria-live="polite">
+          <h2 id="phase-title"></h2>
+          <p id="phase-text"></p>
+          <div id="phase-insight" class="insight"></div>
+        </div>
+        <details class="notes">
+          <summary>读图说明</summary>
+          <p>只画出一对带有该位点的同源染色体，图形与比例为教学示意。前 3 步以 Aa 为例，略去交叉互换，按该位点与着丝粒间未发生交换的情形绘制。豌豆的配子经配子体发育形成。雌性减数分裂的四个产物通常只有一个继续发育。A、a 各占 ½ 指正常分离时的配子概率。</p>
+        </details>
+      </aside>
+    </div>
+  </section>
+
+  <section id="lab" class="view lab-layout" aria-label="杂交实验" hidden>
+    <div class="lab-main">
+      <article class="board cross-board">
+        <div class="board-head"><h2>亲本与配子</h2></div>
+        <div class="cross-body">
+          <div class="segments" aria-label="杂交方式">
+            <button type="button" data-cross="self" aria-pressed="true">自交</button>
+            <button type="button" data-cross="test" aria-pressed="false">测交</button>
+            <button type="button" data-cross="custom" aria-pressed="false">自选亲本</button>
+          </div>
+          <div class="parent-row">
+            <label>母本
+              <select id="female"><option>AA</option><option selected>Aa</option><option>aa</option></select>
+            </label>
+            <span class="cross-mark" aria-hidden="true">×</span>
+            <label>父本
+              <select id="male"><option>AA</option><option selected>Aa</option><option>aa</option></select>
+            </label>
+          </div>
+          <div class="parent-illustration" aria-hidden="true"><span class="plant-art"></span><span class="cross-caption">每次受精，双方各提供一个等位基因</span><span class="plant-art"></span></div><p id="cross-note" class="hint"></p>
+          <table id="punnett" class="punnett" aria-label="杂交棋盘"></table>
+          <p id="cell-detail" class="cell-detail" aria-live="polite"></p>
+        </div>
+      </article>
+      <article class="board sample-board">
+        <div class="board-head"><h2>模拟样本</h2><span class="counter" id="sample-count">共 0 粒</span></div>
+        <div class="sample-body">
+          <div class="sample-controls">
+            <button type="button" id="draw-one" class="primary">抽 1 粒</button>
+            <label class="sr-only" for="batch">每批粒数</label>
+            <select id="batch" aria-label="每批粒数"><option value="20">20 粒</option><option value="100">100 粒</option><option value="1000">1 000 粒</option></select>
+            <button type="button" id="draw-batch">抽取一批</button>
+            <button type="button" id="clear-samples">清空</button>
+          </div>
+          <p id="latest" class="hint" aria-live="polite">每次从两种配子池各独立随机抽取一个配子。抽样结果累加。</p>
+          <div id="sample-seeds" class="sample-seeds" aria-hidden="true"></div>
+          <div id="observed"></div>
+        </div>
+      </article>
+    </div>
+    <aside class="notebook theory">
+      <h2>理论概率</h2>
+      <div id="theory" aria-live="polite"></div>
+      <details class="notes">
+        <summary>比例成立的条件</summary>
+        <p>Aa × Aa 时，双方 A、a 配子各占 ½，随机受精，各类受精卵存活机会相同，得到 AA∶Aa∶aa = 1∶2∶1。在完全显性且表型可准确判定时，黄色∶绿色 = 3∶1。</p>
+        <p>Aa × aa 时，一方只产生 a 配子，另一方 A、a 各占 ½。在同样的随机受精、等存活与完全显性条件下，黄色∶绿色 = 1∶1。有限样本中的频率会波动。</p>
+      </details>
+    </aside>
+  </section>
+
+  <section id="practice" class="view practice-layout" aria-label="应用推理" hidden>
+    <article class="board">
+      <div class="board-head"><h2>逐步推理</h2></div>
+      <div class="practice-body">
+        <label for="exercise">选择题目</label>
+        <select id="exercise">
+          <option value="0">测交鉴别基因型</option>
+          <option value="1">黄色子代中的杂合子</option>
+          <option value="2">连续出现黄色子代</option>
+        </select>
+        <p id="question" class="question"></p>
+        <ol id="reasoning" class="reasoning" aria-live="polite"></ol>
+        <div class="transport practice-controls">
+          <button type="button" id="reason-back">← 上一步</button>
+          <button type="button" id="reason-reset">重做</button>
+          <button type="button" id="reason-next" class="primary">揭示下一步 →</button>
+        </div>
+      </div>
+    </article>
+    <aside class="notebook">
+      <h2>用杂交实验验证</h2>
+      <p id="exercise-link-text"></p>
+      <button id="exercise-lab" type="button">带入实验 →</button>
+    </aside>
+  </section>
+</main>
+</div>
+<script>/* GENETICS */</script>
+<script>/* APP */</script>
+</body>
+</html>

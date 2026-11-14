@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="跟随 Aa 的分离，用棋盘法与随机抽样探究基因分离定律。">
+<title>基因分离定律的实质及应用｜一生儿</title>
+<style>:root {
+  color-scheme: light;
+  --ink:#233b30; --muted:#4c6557; --deep:#173e31; --green:#28634c;
+  --paper:#fffaf0; --canvas:#f4f4e9; --line:#d9dfce;
+  --gold:#f0c25f; --sage:#a9c782;
+  font:16px/1.55 "Source Sans 3","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+* { box-sizing:border-box }
+body { margin:0; color:var(--ink); background:radial-gradient(ellipse at 5% 0,#f5e8cb,transparent 45rem),var(--canvas) }
+h1,h2,p { margin:0 }
+button,select { font:inherit; color:inherit }
+button,select { min-height:43px; padding:.42rem .85rem; border:1px solid #9baa9a; border-radius:9px; background:#fffdf7 }
+button { cursor:pointer; font-weight:650 }
+button:hover:not(:disabled),select:hover:not(:disabled) { background:#e9f0df; border-color:var(--green) }
+:focus-visible { outline:3px solid #985500; outline-offset:3px; z-index:2 }
+button:disabled,select:disabled { cursor:default; opacity:.55 }
+[hidden] { display:none!important }
+.primary,button.primary:hover:not(:disabled) { color:#fffaf0; background:var(--green); border-color:var(--green) }
+button.primary:hover:not(:disabled) { background:var(--deep) }
+.masthead { background:var(--deep); color:#fff8e3; border-bottom:3px solid #bc9e50 }
+.mast-inner { width:min(1200px,100%); margin:auto; padding:.6rem 1.4rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem }
+.brand { font-weight:750; letter-spacing:.035em }
+.display-tools { display:flex; gap:.5rem; flex-shrink:0 }
+.display-tools button { min-height:35px; padding:.3rem .75rem; font-size:.86rem; background:#274f40; border-color:#6b8a72; color:#fff8e3 }
+.display-tools button:hover:not(:disabled) { background:#426956 }
+#landscape { display:none }
+main { max-width:1200px; padding:1.45rem 1.4rem 2.4rem; margin:auto }
+.title-area { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1.15rem }
+.chapter { font-size:.82rem; letter-spacing:.13em; color:var(--muted); font-weight:750; margin-bottom:.3rem }
+h1 { font:800 clamp(1.72rem,3.5vw,3.2rem)/1.18 "Songti SC","Noto Serif CJK SC",Georgia,serif; letter-spacing:.015em; text-wrap:balance }
+h2 { font-size:1.17rem; line-height:1.35 }
+.seed-key { display:flex; align-items:center; gap:1rem; font-size:.84rem; padding-bottom:.16rem; color:var(--muted); flex-shrink:0 }
+.seed-key span { display:flex; align-items:center; gap:.32rem }
+.seed { --seed-fill:var(--gold); --seed-dark:#9d6718; display:inline-block; width:1.05rem; height:1.05rem; flex:none; border:1px solid var(--seed-dark); border-radius:48% 52% 50% 46%; background:radial-gradient(circle at 32% 27%,#fff8caa6,transparent 51%),var(--seed-fill); box-shadow:inset -2px -2px 0 #47301122; transform:rotate(-18deg) }
+.seed.green { --seed-fill:var(--sage); --seed-dark:#4b6a34 }
+.modes { display:flex; gap:.35rem; margin-bottom:.9rem; padding-bottom:.62rem; border-bottom:1px solid #aab8a6 }
+.modes button { min-width:7.25rem; background:transparent; border-color:transparent }
+.modes button[aria-current="page"] { color:#fffaf0; background:var(--deep); border-color:var(--deep) }
+.mechanism-layout,.lab-layout,.practice-layout { display:grid; grid-template-columns:minmax(0,2.15fr) minmax(270px,1fr); gap:1rem; align-items:start }
+.board,.notebook { border:1px solid #a5b3a0; border-radius:16px; overflow:hidden; box-shadow:0 3px 0 #3d604014; background:#fffcf4 }
+.board-head { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.72rem 1rem; background:#e9efe0; border-bottom:1px solid #c7d2bd }
+.kicker { font-weight:750; letter-spacing:.035em; font-size:.9rem }
+.counter { font-weight:750; font-variant-numeric:tabular-nums; font-size:.86rem; color:var(--muted) }
+.notebook { padding:1rem; background:var(--paper); border-color:#c9c4a7 }
+.phases { margin:0; padding:0; list-style:none; counter-reset:phases; display:grid; gap:.24rem }
+.phases li { counter-increment:phases }
+.phases button { width:100%; text-align:left; padding:.38rem .48rem; background:transparent; border-color:transparent; font-size:.92rem; display:flex; align-items:center; gap:.62rem }
+.phases button::before { content:counter(phases); display:grid; place-items:center; width:1.65rem; height:1.65rem; background:#efead8; border:1px solid #d0cbb5; border-radius:50%; color:var(--deep); font-weight:750 }
+.phases button[aria-current="step"] { background:#e7eedc; border-color:#aebfa4 }
+.phases button[aria-current="step"]::before { color:#fffaf0; background:var(--deep); border-color:var(--deep) }
+.explanation { border-top:1px solid #d7d1b7; margin-top:.85rem; padding-top:.95rem }
+.explanation p,.notebook>p { margin:.45rem 0 .7rem; color:var(--muted) }
+.insight { border-left:3px solid #a67a2c; background:#f5ebd1; padding:.45rem .62rem; font-weight:700; font-size:.9rem }
+.notes { margin-top:.8rem; font-size:.87rem; border-top:1px solid #d7d1b7; padding-top:.65rem }
+.notes summary { cursor:pointer; font-weight:750 }
+.notes p { margin-top:.48rem; color:var(--muted) }
+.scene { display:block; position:relative; width:100%; height:clamp(280px,31vw,390px); border:0; border-radius:0; padding:0; overflow:hidden; container-type:inline-size; background:radial-gradient(ellipse at 50% 49%,#fbfcf1 13%,transparent 62%),radial-gradient(#50775630 1px,transparent 1px) 0 0/15px 15px,#e7efdc }
+.scene:hover:not(:disabled) { background:radial-gradient(ellipse at 50% 49%,#fffff4 13%,transparent 62%),radial-gradient(#50775630 1px,transparent 1px) 0 0/15px 15px,#e7efdc }
+.scene:focus-visible { outline-offset:-5px }
+.scene-art { position:absolute; inset:0 0 2rem; display:block }
+.scene-prompt { position:absolute; left:50%; bottom:.66rem; transform:translateX(-50%); padding:.25rem .65rem; border:1px solid #9baa9a; border-radius:99px; background:#fffdf5; font-size:.82rem; white-space:nowrap }
+.scene-caption,.scene-label,.cell-membrane,.chromosome,.direction,.gamete-chip,.fusion-result { position:absolute; left:var(--x); top:var(--y); translate:-50% -50% }
+.scene-caption { font-size:clamp(.85rem,2.2cqw,1.08rem); font-weight:750; white-space:nowrap }
+.scene-label { font-size:clamp(.73rem,1.95cqw,.96rem); white-space:nowrap }
+.cell-membrane { width:var(--w); height:var(--h); border:2px solid #6f9173; border-radius:49% 51% 50% 48%; box-shadow:inset 0 0 0 4px #a9c2984d,0 3px 0 #6b8e6829; background:radial-gradient(ellipse at 38% 30%,#fffff5,#e0ecd4 80%); animation:appear .48s both }
+.chromosome { color:var(--chrom-ink); width:clamp(21px,7cqw,59px); height:clamp(39px,13cqw,102px); filter:drop-shadow(1px 3px 0 #3d502730); }
+.allele-A { --chrom-color:#edb94f; --chrom-ink:#775012; --chip-fill:#ffedb6 }
+.allele-a { --chrom-color:#a6c779; --chrom-ink:#365733; --chip-fill:#e5efd3 }
+.chromosome i { display:block; position:absolute; width:32%; height:93%; top:4%; left:34%; background:var(--chrom-color); border:1.5px solid var(--chrom-ink); box-shadow:inset -3px -2px 0 #32421f23; border-radius:49% 45% 49% 46%; transform:rotate(27deg) }
+.chromosome i+i { transform:rotate(-27deg) }
+.chromosome.single { scale:.76 }
+.chromosome.single i { transform:rotate(-13deg) }
+.chromosome .centromere { position:absolute; left:50%; top:50%; translate:-50% -50%; width:16%; aspect-ratio:1; background:var(--chrom-ink); border-radius:50% }
+.chromosome.single .centromere { width:13% }
+.locus { display:grid; place-items:center; position:absolute; left:75%; top:24%; translate:-50% -50%; width:clamp(15px,3.4cqw,27px); aspect-ratio:1; border-radius:50%; border:1px solid currentColor; color:var(--chrom-ink); background:var(--chip-fill); font:bold clamp(11px,2.5cqw,19px)/1 Georgia,serif }
+.locus::before { content:""; position:absolute; right:100%; width:30%; height:1px; background:currentColor }
+.locus-pair { left:25% }
+.locus-pair::before { right:auto; left:100% }
+.direction { color:#456c50; font-size:clamp(1.25rem,5.2cqw,2.4rem); animation:appear .65s both }
+.fusion-result,.gamete-chip { font:bold clamp(1rem,4cqw,2rem)/1.1 Georgia,serif; display:grid; place-items:center; width:clamp(33px,8.2cqw,66px); aspect-ratio:1; background:var(--chip-fill); border:2px solid var(--chrom-ink); color:var(--chrom-ink); border-radius:50%; box-shadow:inset 0 0 0 3px #fff7dc85 }
+.fusion-result { width:clamp(61px,15cqw,125px); font-size:clamp(1.5rem,6cqw,3rem); background:#fff9df; border-color:#8e8553; color:var(--deep) }
+.fusion-result.filled { animation:appear .35s .52s both }
+.fusion-pick { z-index:2; animation:merge .6s ease-in-out both }
+.pool-prob { display:block; font:600 clamp(.61rem,1.65cqw,.84rem)/1.05 system-ui,sans-serif }
+@keyframes merge {
+  0% { left:var(--from-x); top:var(--from-y); opacity:.8 }
+  82% { opacity:1 }
+  100% { left:50%; top:50%; opacity:0 }
+}
+@keyframes appear { from { opacity:0 } to { opacity:1 } }
+.transport { padding:.75rem .85rem; display:flex; flex-wrap:wrap; gap:.45rem; border-top:1px solid var(--line) }
+.transport .primary { margin-left:auto }
+.lab-main { display:grid; gap:1rem; min-width:0 }
+.cross-body,.sample-body,.practice-body { padding:.85rem 1rem 1rem }
+.segments,.parent-row,.sample-controls { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem }
+.segments button { min-height:38px; font-size:.9rem }
+.segments button[aria-pressed="true"] { background:#e4edda; border-color:#709375; color:#164530 }
+.parent-row { gap:.75rem; margin:.7rem 0 .4rem }
+.parent-row select { margin-left:.35rem; min-width:4.4rem; font-weight:750 }
+.cross-mark { font-size:1.5rem }
+.hint { font-size:.87rem; color:var(--muted); min-height:1.55em }
+.punnett { width:100%; border-spacing:.35rem; margin:.35rem -.35rem 0; width:calc(100% + .7rem); table-layout:fixed; text-align:center }
+.punnett th { font-size:.86rem; font-weight:650; width:28%; background:#eaf0e1; border-radius:7px; padding:.32rem .2rem }
+.punnett th:first-child { width:27% }
+.punnett small { color:var(--muted); margin-left:.2rem }
+.punnett td { padding:0 }
+.punnett td button { width:100%; display:flex; align-items:center; justify-content:center; gap:.45rem; min-height:57px; background:#fff3cf; border-color:#c5a75e; padding:.25rem }
+.punnett td button.recessive { background:#eaf2dd; border-color:#9db784 }
+.punnett td button[aria-pressed="true"] { outline:2px solid var(--deep); outline-offset:-2px }
+.punnett td b { font:700 1.32rem Georgia,serif }
+.cell-detail { min-height:1.5em; color:var(--muted); font-size:.86rem; margin-top:.22rem }
+.theory h2 { margin-bottom:.45rem }
+.distribution { width:100%; border-collapse:collapse; font-size:.88rem; font-variant-numeric:tabular-nums }
+.distribution caption { text-align:left; font-weight:750; padding:.45rem 0 .2rem }
+.distribution th,.distribution td { padding:.26rem .14rem; border-bottom:1px solid #dedac8; text-align:right }
+.distribution th:first-child { text-align:left }
+.distribution thead { font-size:.79rem; color:var(--muted) }
+.distribution .seed { width:.73rem; height:.73rem; margin-right:.34rem }
+.meter { display:block; margin:.12rem 0; height:6px; width:100%; min-width:22px; border-radius:10px; background:#e8e7d9; overflow:hidden }
+.meter i { display:block; height:100%; width:var(--p); background:#548460; border-radius:10px }
+.ratio { margin:.6rem 0 .15rem; font-size:.89rem; font-weight:750 }
+.sample-controls { margin-bottom:.42rem }
+.sample-seeds { display:flex; flex-wrap:wrap; gap:.3rem; margin:.35rem 0 }
+.sample-seeds:empty { display:none }
+.question { margin:.65rem 0; font-weight:750; font-size:1.15rem; max-width:38rem }
+.reasoning { margin:.5rem 0 .95rem; padding-left:1.6rem }
+.reasoning li { padding:.35rem 0 .35rem .24rem }
+.reasoning li:last-child { font-weight:700 }
+.practice-controls { padding:.65rem 0 0 }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
+body.presented { position:fixed; inset:0; overflow:auto; overscroll-behavior:contain }
+@media (max-width:760px) {
+  main { padding:1rem .75rem 1.6rem }
+  .mast-inner { padding:.48rem .75rem }
+  .mechanism-layout,.lab-layout,.practice-layout { grid-template-columns:minmax(0,1fr); gap:.68rem }
+  .lab-main { display:contents }
+  .theory { grid-row:2 }
+  .title-area { flex-wrap:wrap; gap:.48rem; margin-bottom:.7rem }
+  .modes { margin-bottom:.65rem; padding-bottom:.43rem }
+  .modes button { min-width:0; flex:1; padding:.32rem .2rem }
+  .scene { height:clamp(236px,66vw,345px) }
+  .transport { gap:.35rem; padding:.57rem }
+  .transport button { padding:.38rem .5rem; font-size:.84rem }
+  .practice-controls { padding:.65rem 0 0 }
+}
+@media (orientation:portrait) and (max-width:760px) {
+  #landscape { display:block }
+}
+body.rotated { position:fixed; left:100vw; top:0; width:100dvh; height:100vw; overflow:hidden; transform-origin:top left; transform:rotate(90deg); overscroll-behavior:contain }
+body.rotated .mechanism-layout,body.rotated .lab-layout,body.rotated .practice-layout { grid-template-columns:minmax(0,1.9fr) minmax(195px,1fr) }
+body.rotated .lab-main { display:grid }
+body.rotated .theory { grid-row:auto }
+body.rotated #page { width:100%; height:100%; overflow:auto; overscroll-behavior:contain }
+body.rotated main { padding-top:.45rem }
+body.rotated .chapter { display:none }
+body.rotated h1 { font-size:1.48rem }
+body.rotated .title-area { margin-bottom:.38rem }
+body.rotated .modes { margin-bottom:.42rem; padding-bottom:.26rem }
+body.rotated .board-head { padding:.43rem .75rem }
+body.rotated .scene { height:clamp(128px,calc(100vw - 235px),260px) }
+body.rotated .title-area { flex-wrap:nowrap }
+body.rotated .chromosome { height:clamp(30px,8.2cqw,76px) }
+body.rotated .gamete-chip { width:clamp(29px,7cqw,44px); font-size:1rem }
+body.rotated .fusion-result { width:clamp(53px,12cqw,80px) }
+@media (orientation:landscape) and (max-height:530px) {
+  main { padding-top:.45rem }
+  .chapter { display:none }
+  h1 { font-size:1.48rem }
+  .title-area { margin-bottom:.38rem }
+  .modes { margin-bottom:.42rem; padding-bottom:.26rem }
+  .board-head { padding:.43rem .75rem }
+  .scene { height:clamp(128px,calc(100dvh - 235px),260px) }
+  .chromosome { height:clamp(30px,8.2cqw,76px) }
+  .gamete-chip { width:clamp(29px,7cqw,44px); font-size:1rem }
+  .fusion-result { width:clamp(53px,12cqw,80px) }
+  .mechanism-layout,.lab-layout,.practice-layout { grid-template-columns:minmax(0,1.9fr) minmax(195px,1fr) }
+  .lab-main { display:grid }
+  .theory { grid-row:auto }
+}
+@media (max-width:370px) {
+  .brand { font-size:.79rem; letter-spacing:0 }
+  .display-tools { gap:.25rem }
+  .display-tools button { font-size:.75rem; padding:.3rem .4rem }
+  .punnett td button { gap:.25rem }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation-duration:.01ms!important; animation-delay:0ms!important }
+}
+/* AI illustrations, overlaid with precise interactive labels. */
+:root { --paper:#f7f1e5; --canvas:#f5f0e6; --ink:#293d31; --muted:#627064; --deep:#254b3b; --line:#d8d5c7 }
+body { background:#f5f0e6 }
+.masthead { background:transparent; color:var(--deep); border-bottom:1px solid #c9d0bd }
+.mast-inner { max-width:1440px; padding:.7rem 2rem }
+.brand { font-size:.86rem; letter-spacing:.08em }
+.display-tools button { background:transparent; color:var(--deep); border-color:#bac5b6 }
+main { max-width:1440px; padding:1.5rem 2rem 2rem }
+.title-area { margin-bottom:1.3rem }
+h1 { font-size:clamp(1.6rem,3.1vw,2.85rem); letter-spacing:-.025em }
+.chapter { letter-spacing:.18em; font-size:.75rem; margin-bottom:.5rem }
+.modes { gap:1rem; padding-bottom:0; margin-bottom:1.2rem; border-color:#c6cdbc }
+.modes button { padding:.6rem .9rem .8rem; background:none; border:0; border-bottom:3px solid transparent; border-radius:0; color:#738172; font-size:.9rem }
+.modes button[aria-current="page"] { background:none; color:var(--deep); border-bottom:3px solid var(--deep) }
+.mechanism-layout { grid-template-columns:minmax(0,1fr) 300px; gap:1.4rem }
+.board { border-color:#c6cbb9; border-radius:12px; box-shadow:0 8px 25px #5360420a; background:#fcf9f0 }
+.board-head { background:#edf0e3; padding:.8rem 1.2rem; border-bottom:1px solid #d5d9c9 }
+.notebook { background:transparent; border:0; border-radius:0; padding:.3rem 0; box-shadow:none }
+.phases { gap:.6rem }
+.phases button { min-height:51px; border-radius:7px; font-size:.92rem }
+.phases button[aria-current="step"] { background:#e4ebd8; border-color:#b7c5a7 }
+.phases button::before { background:transparent; border-color:#b5c0ad; font-family:Georgia,serif }
+.explanation { margin-top:1.3rem; padding-top:1.2rem }
+.explanation h2 { font-size:1.3rem; line-height:1.5; font-family:'Songti SC',serif }
+.explanation p { font-size:.9rem; line-height:1.9; margin:.75rem 0 }
+.insight { background:#e8ecdc; border-color:#72905b; padding:.8rem; line-height:1.7 }
+.scene,.scene:hover:not(:disabled) { height:clamp(350px,37vw,515px); background:#fcf9f0 }
+.scene-art { inset:0 0 2.7rem }
+.scene-prompt { bottom:.8rem; font-weight:500; color:#697863; border-color:#c9d2bb; background:#fcf9f0; padding:.3rem 1rem }
+.cell-membrane { border:0; border-radius:0; box-shadow:none; background-image:url('assets/biology-atlas.8b82e62ee740.png'); background-size:300% 200%; background-position:0 100%; mix-blend-mode:multiply }
+.chromosome { width:clamp(65px,15cqw,140px); height:clamp(95px,21cqw,195px); filter:none }
+.chromosome-art { display:block; width:100%; height:100%; background-image:url('assets/biology-atlas.8b82e62ee740.png'); background-size:300% 200%; background-position:50% 100%; mix-blend-mode:multiply }
+.allele-a .chromosome-art { background-position:100% 100% }
+.chromosome.single { scale:1; width:clamp(38px,7cqw,68px); height:clamp(65px,16cqw,145px) }
+.chromosome.single .chromosome-art { background-image:url('assets/chromatids.46c3264439f9.png'); background-size:400% 100%; background-position:30% 50% }
+.chromosome.single.allele-a .chromosome-art { background-position:70% 50% }
+.locus { left:67%; top:28%; width:clamp(22px,3.8cqw,34px); background:#fffaf1; border-width:1.5px; box-shadow:0 2px 4px #33452016; font-size:clamp(15px,2.6cqw,23px) }
+.locus-pair { left:33% }
+.chromosome.single .locus { left:57%; top:28% }
+.locus::before { display:none }
+.scene-caption { color:#53654a; font-size:clamp(.8rem,1.8cqw,1rem); letter-spacing:.06em }
+.scene-label { background:#fcf9f0d9; border-radius:5px; padding:3px 9px; color:#64735a; font-size:clamp(.7rem,1.7cqw,.9rem) }
+.plant-context { position:absolute; left:var(--x); top:var(--y); translate:-50% -50%; width:24%; height:86%; display:flex; flex-direction:column; justify-content:center; align-items:center; border-right:1px dashed #bccaaa }
+.plant-art { display:block; width:100%; aspect-ratio:1; background-image:url('assets/biology-atlas.8b82e62ee740.png'); background-size:300% 200%; background-position:0 0; mix-blend-mode:multiply }
+.plant-context .plant-art { width:100%; height:78%; aspect-ratio:auto }
+.plant-name { color:#596d48; font-size:clamp(.7rem,1.6cqw,.9rem); margin-top:.6rem }
+.seed { background-image:url('assets/biology-atlas.8b82e62ee740.png'); background-size:300% 200%; background-position:50% 0; box-shadow:none; border:0; border-radius:0; transform:none; mix-blend-mode:multiply; width:1.7rem; height:1.7rem }
+.seed.green { background-position:100% 0 }
+.seed-key { gap:.8rem; padding:.4rem .8rem; border:1px solid #d0d5c5; border-radius:30px; font-size:.8rem }
+.seed-key .seed { width:2rem; height:2rem }
+.transport { padding:.85rem 1rem; background:#f7f6ed; gap:.6rem }
+.transport button { min-height:42px; font-size:.86rem; border-radius:6px }
+.parent-illustration { display:flex; height:125px; align-items:center; justify-content:space-around; margin:.3rem 0 }
+.parent-illustration .plant-art { width:115px; height:125px; flex-shrink:0 }
+.cross-caption { font-size:.8rem; color:var(--muted); max-width:180px; text-align:center }
+.punnett td button { min-height:95px; flex-direction:column; gap:.1rem }
+.punnett td button .seed { width:55px; height:55px }
+.punnett td button b { font-size:1.15rem }
+.punnett td button small { font-size:.75rem }
+.sample-seeds .seed { width:32px; height:32px }
+.distribution .seed { width:1.2rem; height:1.2rem; vertical-align:middle }
+.fusion-result { background:#f7f5df; border-color:#9eaf84 }
+.pool-chip { background:#f8f7e9; border-color:#a7b88f }
+@media(max-width:1000px) { .mechanism-layout { grid-template-columns:minmax(0,1fr) 255px; gap:.8rem } main { padding:1.2rem } .mast-inner { padding:.65rem 1.2rem } }
+@media(max-width:760px) { .mechanism-layout { grid-template-columns:1fr } main { padding:1rem .7rem } .mast-inner { padding:.5rem .7rem } .brand { font-size:.74rem; letter-spacing:0 } .title-area { gap:.8rem } .seed-key { padding:.2rem .6rem } .modes { gap:.2rem; margin-bottom:.8rem } .modes button { padding:.55rem .2rem; font-size:.8rem } .scene,.scene:hover:not(:disabled) { height:330px } .phases { grid-template-columns:1fr 1fr; gap:.25rem } .phases button { font-size:.78rem; min-height:40px; padding:.2rem } .phases button::before { width:1.4rem; height:1.4rem; flex-shrink:0 } .explanation { margin-top:.75rem; padding-top:.75rem } .notebook { padding:.3rem } .explanation h2 { font-size:1.15rem } .transport { padding:.6rem; gap:.3rem } .transport button { padding:.4rem .45rem; font-size:.78rem } }
+@media(orientation:landscape) and (max-height:530px) { .scene,.scene:hover:not(:disabled) { height:270px } .mechanism-layout { grid-template-columns:minmax(0,1fr) 225px } .phases { grid-template-columns:1fr } .explanation { margin-top:.5rem;padding-top:.5rem } .explanation h2 { font-size:1rem } .explanation p { font-size:.78rem } .chapter { display:none } main { padding-top:.6rem } h1 { font-size:1.5rem } }
+body.rotated .scene { height:270px }
+.chromosome,.plant-context { mix-blend-mode:multiply }
+.seed { background-color:transparent }
+</style>
+</head>
+<body>
+<div id="page">
+<header class="masthead">
+  <div class="mast-inner">
+    <div class="brand">一生儿《高中生物一本通》· 必修 2</div>
+    <div class="display-tools">
+      <button id="landscape" type="button" aria-pressed="false">横屏阅读</button>
+      <button id="fullscreen" type="button" aria-pressed="false">全屏</button>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="title-area">
+    <div>
+      <p class="chapter">孟德尔的豌豆实验 · 01</p>
+      <h1>基因分离定律的实质及应用</h1>
+    </div>
+    <div class="seed-key" aria-label="性状图例">
+      <span><i class="seed yellow"></i><b>A</b> 黄色</span>
+      <span><i class="seed green"></i><b>a</b> 绿色</span>
+    </div>
+  </div>
+
+  <nav class="modes" aria-label="学习内容">
+    <button type="button" data-view="mechanism" aria-current="page">01　看清分离</button>
+    <button type="button" data-view="lab">02　亲手杂交</button>
+    <button type="button" data-view="practice">03　解决问题</button>
+  </nav>
+
+  <section id="mechanism" class="view" aria-label="分离动画">
+    <div class="mechanism-layout">
+      <article class="board">
+        <div class="board-head">
+          <span class="kicker" id="phase-kind"></span>
+          <span class="counter" id="phase-count"></span>
+        </div>
+        <button id="scene" class="scene" type="button" aria-describedby="phase-text">
+          <span class="scene-art" id="scene-art" aria-hidden="true"></span>
+          <span class="scene-prompt" id="scene-prompt"></span>
+        </button>
+        <div class="transport" aria-label="动画控制">
+          <button type="button" id="prev">← 上一步</button>
+          <button type="button" id="play" aria-pressed="false">▷ 播放</button>
+          <button type="button" id="reset">重置</button>
+          <button type="button" id="next" class="primary">下一步 →</button>
+        </div>
+      </article>
+
+      <aside class="notebook">
+        <ol id="phases" class="phases" aria-label="跳转阶段">
+          <li><button type="button" data-stage="0">同源染色体成对</button></li>
+          <li><button type="button" data-stage="1">同源染色体分离</button></li>
+          <li><button type="button" data-stage="2">减数分裂完成</button></li>
+          <li><button type="button" data-stage="3">随机受精</button></li>
+        </ol>
+        <div class="explanation" aria-live="polite">
+          <h2 id="phase-title"></h2>
+          <p id="phase-text"></p>
+          <div id="phase-insight" class="insight"></div>
+        </div>
+        <details class="notes">
+          <summary>读图说明</summary>
+          <p>只画出一对带有该位点的同源染色体，图形与比例为教学示意。前 3 步以 Aa 为例，略去交叉互换，按该位点与着丝粒间未发生交换的情形绘制。豌豆的配子经配子体发育形成。雌性减数分裂的四个产物通常只有一个继续发育。A、a 各占 ½ 指正常分离时的配子概率。</p>
+        </details>
+      </aside>
+    </div>
+  </section>
+
+  <section id="lab" class="view lab-layout" aria-label="杂交实验" hidden>
+    <div class="lab-main">
+      <article class="board cross-board">
+        <div class="board-head"><h2>亲本与配子</h2></div>
+        <div class="cross-body">
+          <div class="segments" aria-label="杂交方式">
+            <button type="button" data-cross="self" aria-pressed="true">自交</button>
+            <button type="button" data-cross="test" aria-pressed="false">测交</button>
+            <button type="button" data-cross="custom" aria-pressed="false">自选亲本</button>
+          </div>
+          <div class="parent-row">
+            <label>母本
+              <select id="female"><option>AA</option><option selected>Aa</option><option>aa</option></select>
+            </label>
+            <span class="cross-mark" aria-hidden="true">×</span>
+            <label>父本
+              <select id="male"><option>AA</option><option selected>Aa</option><option>aa</option></select>
+            </label>
+          </div>
+          <div class="parent-illustration" aria-hidden="true"><span class="plant-art"></span><span class="cross-caption">每次受精，双方各提供一个等位基因</span><span class="plant-art"></span></div><p id="cross-note" class="hint"></p>
+          <table id="punnett" class="punnett" aria-label="杂交棋盘"></table>
+          <p id="cell-detail" class="cell-detail" aria-live="polite"></p>
+        </div>
+      </article>
+      <article class="board sample-board">
+        <div class="board-head"><h2>模拟样本</h2><span class="counter" id="sample-count">共 0 粒</span></div>
+        <div class="sample-body">
+          <div class="sample-controls">
+            <button type="button" id="draw-one" class="primary">抽 1 粒</button>
+            <label class="sr-only" for="batch">每批粒数</label>
+            <select id="batch" aria-label="每批粒数"><option value="20">20 粒</option><option value="100">100 粒</option><option value="1000">1 000 粒</option></select>
+            <button type="button" id="draw-batch">抽取一批</button>
+            <button type="button" id="clear-samples">清空</button>
+          </div>
+          <p id="latest" class="hint" aria-live="polite">每次从两种配子池各独立随机抽取一个配子。抽样结果累加。</p>
+          <div id="sample-seeds" class="sample-seeds" aria-hidden="true"></div>
+          <div id="observed"></div>
+        </div>
+      </article>
+    </div>
+    <aside class="notebook theory">
+      <h2>理论概率</h2>
+      <div id="theory" aria-live="polite"></div>
+      <details class="notes">
+        <summary>比例成立的条件</summary>
+        <p>Aa × Aa 时，双方 A、a 配子各占 ½，随机受精，各类受精卵存活机会相同，得到 AA∶Aa∶aa = 1∶2∶1。在完全显性且表型可准确判定时，黄色∶绿色 = 3∶1。</p>
+        <p>Aa × aa 时，一方只产生 a 配子，另一方 A、a 各占 ½。在同样的随机受精、等存活与完全显性条件下，黄色∶绿色 = 1∶1。有限样本中的频率会波动。</p>
+      </details>
+    </aside>
+  </section>
+
+  <section id="practice" class="view practice-layout" aria-label="应用推理" hidden>
+    <article class="board">
+      <div class="board-head"><h2>逐步推理</h2></div>
+      <div class="practice-body">
+        <label for="exercise">选择题目</label>
+        <select id="exercise">
+          <option value="0">测交鉴别基因型</option>
+          <option value="1">黄色子代中的杂合子</option>
+          <option value="2">连续出现黄色子代</option>
+        </select>
+        <p id="question" class="question"></p>
+        <ol id="reasoning" class="reasoning" aria-live="polite"></ol>
+        <div class="transport practice-controls">
+          <button type="button" id="reason-back">← 上一步</button>
+          <button type="button" id="reason-reset">重做</button>
+          <button type="button" id="reason-next" class="primary">揭示下一步 →</button>
+        </div>
+      </div>
+    </article>
+    <aside class="notebook">
+      <h2>用杂交实验验证</h2>
+      <p id="exercise-link-text"></p>
+      <button id="exercise-lab" type="button">带入实验 →</button>
+    </aside>
+  </section>
+</main>
+</div>
+<script>const Genetics = (() => {
+  const genotypes = ['AA', 'Aa', 'aa'];
+
+  function gametes(genotype) {
+    const alleles = [...new Set(genotype)];
+    return alleles.map(allele => ({ allele, p: 1 / alleles.length }));
+  }
+
+  function combine(egg, sperm) {
+    return egg === sperm ? egg + sperm : 'Aa';
+  }
+
+  function cross(female, male) {
+    const eggs = gametes(female);
+    const sperm = gametes(male);
+    const totals = { AA: 0, Aa: 0, aa: 0 };
+    const cells = eggs.map(egg => sperm.map(pollen => {
+      const genotype = combine(egg.allele, pollen.allele);
+      const p = egg.p * pollen.p;
+      totals[genotype] += p;
+      return { genotype, p, egg, sperm: pollen };
+    }));
+    return {
+      eggs, sperm, cells, genotypes: totals,
+      phenotypes: { yellow: totals.AA + totals.Aa, green: totals.aa },
+    };
+  }
+
+  function resolveParents(mode, female, male) {
+    if (mode === 'self') return [female, female];
+    if (mode === 'test') return [female, 'aa'];
+    return [female, male];
+  }
+
+  function fertilize(female, male, random = Math.random) {
+    const egg = female[Math.floor(random() * 2)];
+    const sperm = male[Math.floor(random() * 2)];
+    return { egg, sperm, genotype: combine(egg, sperm) };
+  }
+
+  return { genotypes, gametes, cross, resolveParents, fertilize };
+})();
+if (typeof module !== 'undefined') module.exports = Genetics;
+</script>
+<script>(() => {
+  const { genotypes, cross, resolveParents, fertilize } = Genetics;
+  const byId = id => document.getElementById(id);
+  const all = selector => [...document.querySelectorAll(selector)];
+  const number = new Intl.NumberFormat('zh-CN');
+  const percent = probability => `${Math.round(probability * 1000) / 10}%`;
+  const fraction = probability => ({ 1: '1', 0.5: '½', 0.25: '¼' }[probability]);
+  const phenotype = genotype => genotype === 'aa' ? '绿色' : '黄色';
+  const seed = genotype => `<i class="seed ${genotype === 'aa' ? 'green' : 'yellow'}" aria-hidden="true"></i>`;
+
+  const phases = [
+    {
+      kind: '分裂前期 · 已完成复制',
+      title: 'A 和 a 位于同源染色体的相同位置',
+      text: 'Aa 细胞中，一条同源染色体带 A，另一条带 a。图中的染色体已经复制，每条包含两条姐妹染色单体。',
+      insight: '先找基因位点，再追踪染色体的去向。',
+    },
+    {
+      kind: '减数第一次分裂 · 后期',
+      title: '同源染色体分向两极',
+      text: '带 A 和带 a 的同源染色体被拉向细胞两极。随同源染色体分开，A 与 a 也分别进入两个子细胞。此时姐妹染色单体仍连在一起。',
+      insight: '等位基因随同源染色体分离。',
+    },
+    {
+      kind: '减数第二次分裂 · 完成',
+      title: '每个分裂产物只含 A 或 a',
+      text: '姐妹染色单体分开后，图中 4 个单倍体产物有 2 个带 A、2 个带 a。正常情况下，Aa 产生的 A 与 a 配子各占 ½。',
+      insight: '配子只带这一对等位基因中的一个。',
+    },
+    {
+      kind: '受精 · 从两个配子池各取一个',
+      title: '受精使等位基因重新成对',
+      text: '点击画面，从卵细胞池和精子池各随机抽取一个配子。两者携带的等位基因决定这一粒子代的基因型。结果计入杂交实验。',
+      insight: '每次受精独立抽取，结果可重复出现。',
+    },
+  ];
+
+  const exercises = [
+    {
+      question: '一株结黄色种子的豌豆是 AA 还是 Aa？怎样用测交判断？',
+      steps: [
+        '黄色是显性表型，待测植株可能是 AA，也可能是 Aa。',
+        '用隐性纯合子 aa 测交。它只提供 a，子代差异来自待测亲本的配子。',
+        '如果待测亲本是 AA，理论上子代全为黄色 Aa；如果是 Aa，理论上黄色 Aa 和绿色 aa 各占 ½。',
+        '出现绿色子代可判定待测亲本为 Aa。样本量较小时，若子代全黄，Aa 仍有可能。',
+      ],
+      link: '从 Aa × aa 开始，再把母本改成 AA，比较两种假设。',
+      mode: 'test',
+    },
+    {
+      question: 'Aa 自交，已知随机选到的是一粒黄色种子。它是 Aa 的概率是多少？',
+      steps: [
+        'Aa 自交，子代 AA、Aa、aa 的理论概率依次为 ¼、½、¼。',
+        '在完全显性条件下，黄色包括 AA 和 Aa，因此黄色的概率为 ¼ + ½ = ¾。',
+        'Aa 都是黄色。限定在黄色子代中，Aa 的条件概率是 (½) ÷ (¾) = ⅔。',
+      ],
+      link: '带入 Aa 自交，在棋盘中逐格找出能形成黄色子代的格子。',
+      mode: 'self',
+    },
+    {
+      question: '已知 Aa 与 aa 测交，随机观察 3 粒子代。三粒都为黄色的概率是多少？',
+      steps: [
+        'Aa × aa 的子代有 ½ 为黄色 Aa，½ 为绿色 aa。',
+        '若三次受精相互独立，每粒仍有 ½ 的概率为黄色。',
+        '三粒都为黄色的概率为 ½ × ½ × ½ = ⅛。样本很小时，测交可能暂时观察不到绿色。',
+      ],
+      link: '带入 Aa × aa，连续点三次「抽 1 粒」观察结果。',
+      mode: 'test',
+    },
+  ];
+
+  let stage = 0;
+  let view = 'mechanism';
+  let mode = 'self';
+  let female = 'Aa';
+  let customMale = 'Aa';
+  let run = null;
+  let reason = 0;
+  let selectedCell = null;
+  let counts = { AA: 0, Aa: 0, aa: 0 };
+  let recent = [];
+  let latest = null;
+  let fusion = null;
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const naturalLandscape = window.matchMedia('(orientation: landscape)');
+  const parents = () => resolveParents(mode, female, customMale);
+
+  function setPressed(selector, isActive) {
+    for (const button of all(selector)) {
+      button.setAttribute('aria-pressed', String(isActive(button)));
+    }
+  }
+
+  function showView(nextView, moveFocus = false) {
+    stopPlayback();
+    view = nextView;
+    for (const panel of all('.view')) panel.hidden = panel.id !== view;
+    for (const button of all('[data-view]')) {
+      if (button.dataset.view === view) {
+        button.setAttribute('aria-current', 'page');
+        if (moveFocus) button.focus();
+      } else {
+        button.removeAttribute('aria-current');
+      }
+    }
+    if (view === 'mechanism') renderStage();
+    if (view === 'lab') renderLab();
+    if (view === 'practice') renderExercise();
+  }
+
+  function at(className, x, y, content = '', style = '') {
+    return `<span class="${className}" style="--x:${x}%;--y:${y}%;${style}">${content}</span>`;
+  }
+
+  function membrane(x, y, width, height) {
+    return at('cell-membrane', x, y, '', `--w:${width}%;--h:${height}%;`);
+  }
+
+  function chromosome(allele, x, y, single = false) {
+    return at(`chromosome allele-${allele}${single ? ' single' : ''}`, x, y,
+      `<span class="chromosome-art" aria-hidden="true"></span><span class="locus">${allele}</span>${single ? '' : `<span class="locus locus-pair">${allele}</span>`}`);
+  }
+
+  function renderSeparation() {
+    if (stage === 0) {
+      return at('plant-context', 12, 51, '<span class="plant-art"></span><span class="plant-name">豌豆 · Aa</span>') + membrane(59, 50, 55, 82) + chromosome('A', 51, 50) + chromosome('a', 67, 50)
+        + at('scene-caption', 59, 9, '走进 Aa 的细胞')
+        + at('scene-label', 59, 91, '相同位点 · 不同等位基因');
+    }
+    if (stage === 1) {
+      return membrane(50, 50, 87, 72) + chromosome('A', 27, 50) + chromosome('a', 73, 50)
+        + at('direction', 42, 48, '⟵') + at('direction', 58, 48, '⟶')
+        + at('scene-label', 27, 75, '携带 A') + at('scene-label', 73, 75, '携带 a');
+    }
+    return at('scene-caption', 50, 14, '4 个单倍体产物')
+      + [14, 38, 62, 86].map((x, index) => {
+        const allele = index < 2 ? 'A' : 'a';
+        return membrane(x, 49, 21, 53) + chromosome(allele, x, 49, true);
+      }).join('')
+      + at('scene-label', 26, 84, 'A 配子概率 ½')
+      + at('scene-label', 74, 84, 'a 配子概率 ½');
+  }
+
+  function renderFertilization() {
+    const [mother, father] = parents();
+    const { eggs, sperm } = cross(mother, father);
+    const poolY = (gameteList, index) => gameteList.length === 1 ? 50 : 35 + index * 37;
+    const pool = (gameteList, x) => gameteList.map(({ allele, p }, index) =>
+      at(`gamete-chip pool-chip allele-${allele}`, x, poolY(gameteList, index),
+        `<span>${allele}<small class="pool-prob">${fraction(p)}</small></span>`)
+    ).join('');
+    const pick = (allele, gameteList, x) => {
+      const y = poolY(gameteList, gameteList.findIndex(item => item.allele === allele));
+      return at(`gamete-chip fusion-pick allele-${allele}`, 50, 50, allele,
+        `--from-x:${x}%;--from-y:${y}%;`);
+    };
+    const paired = fusion ? pick(fusion.egg, eggs, 19) + pick(fusion.sperm, sperm, 81) : '';
+    return at('scene-caption', 19, 14, `卵细胞池 · ${mother}`)
+      + at('scene-caption', 81, 14, `精子池 · ${father}`)
+      + pool(eggs, 19) + pool(sperm, 81)
+      + at('direction', 33, 50, '→') + at('direction', 67, 50, '←')
+      + at(`fusion-result${fusion ? ' filled' : ''}`, 50, 50, fusion?.genotype ?? '?')
+      + at('scene-label', 50, 75, fusion ? `受精卵 · ${phenotype(fusion.genotype)}子代` : '待受精')
+      + paired;
+  }
+
+  function renderStage(previous = stage) {
+    const phase = phases[stage];
+    byId('phase-kind').textContent = phase.kind;
+    byId('phase-count').textContent = `${stage + 1} / ${phases.length}`;
+    byId('phase-title').textContent = phase.title;
+    byId('phase-text').textContent = phase.text;
+    byId('phase-insight').textContent = phase.insight;
+    byId('scene').dataset.stage = stage;
+    byId('scene-art').innerHTML = stage === 3 ? renderFertilization() : renderSeparation();
+    byId('scene-prompt').textContent = stage === 3 ? '点击画面 · 随机受精' : '点击画面 · 推进动画';
+    byId('scene').setAttribute('aria-label', stage === 3 && fusion
+      ? `抽到 ${fusion.egg} 卵细胞和 ${fusion.sperm} 精子，受精卵为 ${fusion.genotype}。点击再次随机受精`
+      : byId('scene-prompt').textContent);
+    byId('prev').disabled = stage === 0;
+    byId('next').textContent = stage === 3 ? '进入杂交实验 →' : '下一步 →';
+    for (const button of all('[data-stage]')) {
+      if (Number(button.dataset.stage) === stage) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    }
+
+    const offsets = previous === 0 && stage === 1 ? [16, -16]
+      : previous === 1 && stage === 2 ? [13, -11, 11, -13] : [];
+    if (!motion.matches) all('.chromosome').forEach((item, index) => {
+      if (offsets[index] === undefined) return;
+      const distance = byId('scene').clientWidth * offsets[index] / 100;
+      item.animate([{ transform: `translateX(${distance}px)` }, { transform: 'translateX(0)' }],
+        { duration: 680, easing: 'cubic-bezier(.27,.73,.29,1)' });
+    });
+  }
+
+  function goStage(next, manual = true) {
+    if (manual) stopPlayback();
+    const previous = stage;
+    stage = Math.min(Math.max(next, 0), phases.length - 1);
+    if (previous !== stage) fusion = null;
+    renderStage(previous);
+  }
+
+  function stopPlayback() {
+    clearInterval(run);
+    run = null;
+    byId('play').textContent = '▷ 播放';
+    byId('play').setAttribute('aria-pressed', 'false');
+  }
+
+  function togglePlayback() {
+    if (run !== null) {
+      stopPlayback();
+      return;
+    }
+    if (stage === 3) goStage(0, false);
+    byId('play').textContent = 'Ⅱ 暂停';
+    byId('play').setAttribute('aria-pressed', 'true');
+    run = setInterval(() => {
+      if (stage < 3) goStage(stage + 1, false);
+      else {
+        drawFusion();
+        stopPlayback();
+      }
+    }, 2350);
+  }
+
+  function draw(count) {
+    const [mother, father] = parents();
+    for (let index = 0; index < count; index++) {
+      latest = fertilize(mother, father);
+      counts[latest.genotype]++;
+      recent.push(latest.genotype);
+      if (recent.length > 24) recent.shift();
+    }
+    return latest;
+  }
+
+  function drawFusion() {
+    fusion = draw(1);
+    renderStage();
+  }
+
+  function clearSamples() {
+    counts = { AA: 0, Aa: 0, aa: 0 };
+    recent = [];
+    latest = null;
+    fusion = null;
+  }
+
+  function changeCross(update) {
+    const previous = parents().join('×');
+    update();
+    if (parents().join('×') !== previous) {
+      clearSamples();
+      selectedCell = null;
+    }
+    renderLab();
+  }
+
+  function renderPunnett(result) {
+    const { eggs, sperm, cells } = result;
+    const heading = gamete => `<b>${gamete.allele}</b><small>${fraction(gamete.p)}</small>`;
+    byId('punnett').innerHTML = `<thead><tr><th>卵 ↓ / 精 →</th>${
+      sperm.map(item => `<th scope="col">${heading(item)}</th>`).join('')
+    }</tr></thead><tbody>${cells.map((row, i) => `<tr><th scope="row">${heading(eggs[i])}</th>${
+      row.map(({ genotype, p }, j) => `<td><button type="button" data-cell="${i}:${j}" aria-label="${genotype}，${percent(p)}"
+        class="${genotype === 'aa' ? 'recessive' : ''}" aria-pressed="${selectedCell === `${i}:${j}`}">
+        ${seed(genotype)}<b>${genotype}</b><small>${percent(p)}</small></button></td>`).join('')
+    }</tr>`).join('')}</tbody>`;
+    renderCellDetail(result);
+  }
+
+  function renderCellDetail(result) {
+    let description = '点棋盘格，查看配子组合和概率。';
+    if (selectedCell !== null) {
+      const [i, j] = selectedCell.split(':').map(Number);
+      const { egg, sperm, genotype, p } = result.cells[i][j];
+      description = `卵 ${egg.allele} × 精 ${sperm.allele} → ${genotype}（${phenotype(genotype)}）。本格概率 ${fraction(egg.p)} × ${fraction(sperm.p)} = ${percent(p)}。`;
+    }
+    byId('cell-detail').textContent = description;
+  }
+
+  function distribution(caption, rows, total = null) {
+    const observed = total !== null;
+    return `<table class="distribution"><caption>${caption}</caption><thead><tr><th scope="col">类别</th>
+      ${observed ? '<th scope="col">粒数</th>' : ''}<th scope="col">${observed ? '频率' : '概率'}</th>
+      <th scope="col"><span class="sr-only">比例条</span></th></tr></thead><tbody>
+      ${rows.map(([name, value, icon]) => {
+        const p = observed ? value / total : value;
+        const displayed = observed && !total ? '—' : percent(p);
+        const width = observed && !total ? 0 : p * 100;
+        return `<tr><th scope="row">${icon ?? ''}${name}</th>
+          ${observed ? `<td>${number.format(value)}</td>` : ''}<td>${displayed}</td>
+          <td><span class="meter" aria-hidden="true"><i style="--p:${width}%"></i></span></td></tr>`;
+      }).join('')}</tbody></table>`;
+  }
+
+  function renderSamples() {
+    const total = counts.AA + counts.Aa + counts.aa;
+    byId('sample-count').textContent = `共 ${number.format(total)} 粒`;
+    byId('clear-samples').disabled = total === 0;
+    byId('latest').textContent = latest
+      ? `最近一粒：卵 ${latest.egg} × 精 ${latest.sperm} → ${latest.genotype}（${phenotype(latest.genotype)}）。下方展示最近 ${recent.length} 粒。`
+      : '每次从卵细胞池和精子池各独立抽取一个配子。抽样结果累加。';
+    byId('sample-seeds').innerHTML = recent.map(seed).join('');
+    byId('observed').innerHTML = distribution('实测基因型', genotypes.map(g => [g, counts[g]]), total)
+      + distribution('实测表型', [['黄色', counts.AA + counts.Aa, seed('AA')], ['绿色', counts.aa, seed('aa')]], total);
+  }
+
+  function renderLab() {
+    const [mother, father] = parents();
+    byId('female').value = mother;
+    byId('male').value = father;
+    byId('male').disabled = mode !== 'custom';
+    setPressed('[data-cross]', button => button.dataset.cross === mode);
+    byId('cross-note').textContent = {
+      self: '同株自交，父本基因型与母本相同。',
+      test: '测交，以隐性纯合子 aa 提供精子。',
+      custom: '可分别选择卵细胞和精子的亲本。',
+    }[mode];
+    const result = cross(mother, father);
+    renderPunnett(result);
+    const { yellow, green } = result.phenotypes;
+    const key = [mother, father].sort().join('×');
+    const ratio = key === 'Aa×Aa'
+      ? '基因型 1∶2∶1 · 表型 3∶1'
+      : key === 'Aa×aa' ? 'Aa∶aa = 1∶1 · 黄色∶绿色 = 1∶1' : '';
+    byId('theory').innerHTML = distribution('子代基因型', genotypes.map(g => [g, result.genotypes[g]]))
+      + distribution('子代表型 · 完全显性', [['黄色', yellow, seed('AA')], ['绿色', green, seed('aa')]])
+      + (ratio ? `<p class="ratio">${ratio}</p>` : '');
+    renderSamples();
+  }
+
+  function renderExercise() {
+    const exercise = exercises[byId('exercise').value];
+    byId('question').textContent = exercise.question;
+    byId('reasoning').innerHTML = exercise.steps.slice(0, reason).map(step => `<li>${step}</li>`).join('');
+    byId('reason-next').disabled = reason === exercise.steps.length;
+    byId('reason-next').textContent = reason === exercise.steps.length ? '推理完成' : '揭示下一步 →';
+    byId('reason-back').disabled = reason === 0;
+    byId('reason-reset').disabled = reason === 0;
+    byId('exercise-link-text').textContent = exercise.link;
+  }
+
+  function renderDisplay() {
+    const rotated = document.body.classList.contains('rotated');
+    const full = Boolean(document.fullscreenElement) || document.body.classList.contains('presented');
+    byId('landscape').setAttribute('aria-pressed', String(rotated));
+    byId('landscape').textContent = rotated ? '恢复竖屏' : '横屏阅读';
+    byId('fullscreen').setAttribute('aria-pressed', String(full));
+    byId('fullscreen').textContent = full ? '退出全屏' : '全屏';
+  }
+
+  async function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else if (document.body.classList.contains('presented')) {
+      document.body.classList.remove('presented');
+    } else {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch {
+        document.body.classList.add('presented');
+      }
+    }
+    renderDisplay();
+  }
+
+  all('[data-view]').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
+  all('[data-stage]').forEach(button => button.addEventListener('click', () => goStage(Number(button.dataset.stage))));
+  byId('prev').addEventListener('click', () => goStage(stage - 1));
+  byId('next').addEventListener('click', () => stage === 3 ? showView('lab', true) : goStage(stage + 1));
+  byId('play').addEventListener('click', togglePlayback);
+  byId('reset').addEventListener('click', () => goStage(0));
+  byId('scene').addEventListener('click', () => {
+    if (stage < 3) goStage(stage + 1);
+    else {
+      stopPlayback();
+      drawFusion();
+    }
+  });
+  all('[data-cross]').forEach(button => button.addEventListener('click', () => changeCross(() => {
+    mode = button.dataset.cross;
+  })));
+  byId('female').addEventListener('change', event => changeCross(() => { female = event.target.value; }));
+  byId('male').addEventListener('change', event => changeCross(() => { customMale = event.target.value; }));
+  byId('punnett').addEventListener('click', event => {
+    const button = event.target.closest('[data-cell]');
+    if (!button) return;
+    selectedCell = button.dataset.cell;
+    setPressed('[data-cell]', cell => cell === button);
+    renderCellDetail(cross(...parents()));
+  });
+  byId('draw-one').addEventListener('click', () => { draw(1); renderSamples(); });
+  byId('draw-batch').addEventListener('click', () => { draw(Number(byId('batch').value)); renderSamples(); });
+  byId('clear-samples').addEventListener('click', () => { clearSamples(); renderSamples(); });
+  byId('exercise').addEventListener('change', () => { reason = 0; renderExercise(); });
+  byId('reason-next').addEventListener('click', () => { reason++; renderExercise(); });
+  byId('reason-back').addEventListener('click', () => { reason--; renderExercise(); });
+  byId('reason-reset').addEventListener('click', () => { reason = 0; renderExercise(); });
+  byId('exercise-lab').addEventListener('click', () => {
+    changeCross(() => { mode = exercises[byId('exercise').value].mode; female = 'Aa'; });
+    showView('lab', true);
+  });
+  byId('fullscreen').addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', renderDisplay);
+  byId('landscape').addEventListener('click', () => {
+    document.body.classList.toggle('rotated');
+    renderDisplay();
+  });
+  naturalLandscape.addEventListener('change', event => {
+    if (event.matches) document.body.classList.remove('rotated');
+    renderDisplay();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    document.body.classList.remove('presented', 'rotated');
+    renderDisplay();
+  });
+
+  renderStage();
+  renderLab();
+  renderExercise();
+})();
+</script>
+</body>
+</html>
